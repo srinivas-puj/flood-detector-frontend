@@ -166,17 +166,18 @@ function App() {
   const latestLevel = currentData[currentData.length - 1].level;
 
   return (
-    <div className="App" style={{ padding: 24, maxWidth: 400, margin: '0 auto' }}>
-      <h2>Flood Detector Dashboard</h2>
-      <p style={{ color: "#444", marginBottom: 12 }}>
+    <div className="App" style={{ padding: 24, maxWidth: 400, margin: '0 auto', background: '#e3f0ff', borderRadius: 12, boxShadow: '0 2px 12px #b6d6f6' }}>
+      <h2 style={{ color: "#0057b8" }}>Flood Detector Dashboard</h2>
+      <p style={{ color: "#222", marginBottom: 12 }}>
         IoT-based early warning system for real-time flood monitoring.
       </p>
       <div style={{ marginBottom: 16 }}>
-        <label htmlFor="device-select">Select ESP Device: </label>
+        <label htmlFor="device-select" style={{ color: "#0057b8" }}>Select ESP Device: </label>
         <select
           id="device-select"
           value={selectedDevice}
           onChange={e => setSelectedDevice(e.target.value)}
+          style={{ background: "#fff", border: "1px solid #0057b8", borderRadius: 4, color: "#0057b8", padding: "0.3em 0.7em" }}
         >
           {devices.map(device => (
             <option key={device.id} value={device.id}>{device.name}</option>
@@ -187,7 +188,7 @@ function App() {
       <AlertBanner level={latestLevel} />
       <LineGraph data={currentData} />
       <SensorTable data={currentData} />
-      <p style={{ marginTop: 24, color: '#555', fontSize: 13 }}>
+      <p style={{ marginTop: 24, color: '#0057b8', fontSize: 13 }}>
         This is a demo graph showing water level readings for the selected ESP device.
       </p>
       <div style={{
@@ -200,7 +201,7 @@ function App() {
       }}>
         Emergency Contact: 9391****50
       </div>
-      <footer style={{ marginTop: 32, fontSize: 12, color: "#aaa" }}>
+      <footer style={{ marginTop: 32, fontSize: 12, color: "#0057b8" }}>
         &copy; {new Date().getFullYear()} IoT Flood Detection Mini Project
       </footer>
     </div>
