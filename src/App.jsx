@@ -27,6 +27,7 @@ function App() {
       </div>
       <p className="read-the-docs">
         This is flood detector front end application. It is built using React and Vite.
+	A project by Srinivas, Shravan and Shishir
       </p>
     </>
   )
