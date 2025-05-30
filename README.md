@@ -10,3 +10,4 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+[![Netlify Status](https://api.netlify.com/api/v1/badges/eaa74683-f5b6-42ed-838a-1bf44e55dd7b/deploy-status)](https://app.netlify.com/projects/flood-detector-frontend/deploys)
