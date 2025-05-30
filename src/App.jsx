@@ -35,8 +35,8 @@ function LineGraph({ data }) {
   if (!data || data.length === 0) return <div>No data</div>;
 
   // Normalize data for SVG
-  const width = 300;
-  const height = 150;
+  const width = 700;
+  const height = 350;
   const maxLevel = Math.max(...data.map(d => d.level));
   const minLevel = Math.min(...data.map(d => d.level));
   const points = data.map((d, i) => {
