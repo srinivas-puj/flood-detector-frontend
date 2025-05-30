@@ -1,126 +1,169 @@
-import { useState } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import {
+  Line
+} from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  LinearScale,
+  TimeScale,
+  Title,
+  Tooltip,
+  Legend,
+  CategoryScale
+} from 'chart.js';
 
-// Dummy ESP device list
-const devices = [
-  { id: 'esp1', name: 'ESP Device 1' },
-  { id: 'esp2', name: 'ESP Device 2' },
-  { id: 'esp3', name: 'ESP Device 3' },
-];
+ChartJS.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  TimeScale,
+  Title,
+  Tooltip,
+  Legend,
+  CategoryScale
+);
 
-// Dummy sensor data for each device (timestamp, water level)
-const dummyData = {
-  esp1: [
-    { time: '10:00', level: 2 },
-    { time: '10:10', level: 3 },
-    { time: '10:20', level: 4 },
-    { time: '10:30', level: 3.5 },
-  ],
-  esp2: [
-    { time: '10:00', level: 1 },
-    { time: '10:10', level: 1.5 },
-    { time: '10:20', level: 2 },
-    { time: '10:30', level: 2.2 },
-  ],
-  esp3: [
-    { time: '10:00', level: 4 },
-    { time: '10:10', level: 4.2 },
-    { time: '10:20', level: 4.5 },
-    { time: '10:30', level: 5 },
-  ],
-};
+const FIREBASE_URL = 'https://flood-detector-f5cae-default-rtdb.firebaseio.com';
 
-// Simple line graph component using SVG
-function LineGraph({ data }) {
-  if (!data || data.length === 0) return <div>No data</div>;
+function timestampToTime(ts) {
+  const date = new Date(ts * 1000);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
-  // Normalize data for SVG
-  const width = 300;
-  const height = 150;
-  const maxLevel = Math.max(...data.map(d => d.level));
-  const minLevel = Math.min(...data.map(d => d.level));
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * (width - 40) + 20;
-    const y = height - 20 - ((d.level - minLevel) / (maxLevel - minLevel || 1)) * (height - 40);
-    return `${x},${y}`;
-  }).join(' ');
+const DEVICE_LIST = ['esp-12e', 'esp-32a', 'sensor-node-01']; // Example device IDs
+
+function App() {
+  const [deviceId, setDeviceId] = useState('esp-12e');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data when device changes
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const res = await fetch(`${FIREBASE_URL}/devices/${deviceId}/readings.json`);
+        if (!res.ok) throw new Error('Network response was not ok');
+        const json = await res.json();
+
+        const readings = Object.values(json || {}).map(({ timestamp, value }) => ({
+          time: timestampToTime(timestamp),
+          level: value / 100,
+        }));
+
+        readings.sort((a, b) => new Date(`1970-01-01T${a.time}:00`) - new Date(`1970-01-01T${b.time}:00`));
+
+        setData(readings);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [deviceId]);
+
+  const latestLevel = data.length ? data[data.length - 1].level : 0;
 
   return (
-    <svg width={width} height={height} style={{ background: '#f4f8fb', borderRadius: 8 }}>
-      {/* X and Y axis */}
-      <line x1="20" y1={height - 20} x2={width - 20} y2={height - 20} stroke="#aaa" />
-      <line x1="20" y1="20" x2="20" y2={height - 20} stroke="#aaa" />
-      {/* Graph line */}
-      <polyline
-        fill="none"
-        stroke="#0074D9"
-        strokeWidth="3"
-        points={points}
-      />
-      {/* Dots */}
-      {data.map((d, i) => {
-        const x = (i / (data.length - 1)) * (width - 40) + 20;
-        const y = height - 20 - ((d.level - minLevel) / (maxLevel - minLevel || 1)) * (height - 40);
-        return (
-          <circle key={i} cx={x} cy={y} r="4" fill="#0074D9" />
-        );
-      })}
-      {/* Labels */}
-      {data.map((d, i) => {
-        const x = (i / (data.length - 1)) * (width - 40) + 20;
-        return (
-          <text key={i} x={x} y={height - 5} fontSize="10" textAnchor="middle">{d.time}</text>
-        );
-      })}
-      <text x="5" y="30" fontSize="10" textAnchor="start" fill="#333">Level</text>
-    </svg>
+    <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', padding: '2rem' }}>
+      <h2>🌊 Flood Detector Dashboard</h2>
+
+      {/* Device Selector */}
+      <div style={{ marginBottom: '1rem' }}>
+        <label>Select Device: </label>
+        <select value={deviceId} onChange={e => setDeviceId(e.target.value)}>
+          {DEVICE_LIST.map(device => (
+            <option key={device} value={device}>{device}</option>
+          ))}
+        </select>
+      </div>
+
+      {loading && <div>Loading data...</div>}
+      {!loading && !data.length && <div>No sensor data available.</div>}
+
+      {!loading && data.length > 0 && (
+        <>
+          <LineGraph data={data} />
+          <SensorTable data={data} />
+          {latestLevel >= 4 && <AlertBanner level={latestLevel} />}
+        </>
+      )}
+    </div>
   );
 }
 
-function DeviceInfo({ deviceId }) {
-  // You can expand this with more info per device if needed
-  const info = {
-    esp1: "Located at Riverbank A. Monitors upstream water levels.",
-    esp2: "Located at Bridge B. Monitors midstream water levels.",
-    esp3: "Located at Village C. Monitors downstream water levels.",
+function LineGraph({ data }) {
+  const chartData = {
+    labels: data.map(d => d.time),
+    datasets: [
+      {
+        label: 'Water turbidity',
+        data: data.map(d => d.level),
+        borderColor: 'blue',
+        backgroundColor: 'lightblue',
+        tension: 0.4,
+        fill: true
+      }
+    ]
   };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#000' }
+      },
+      title: {
+        display: true,
+        text: 'Water Turbidity Over Time',
+        color: '#000'
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#000' },
+        grid: { color: '#ccc' }
+      },
+      y: {
+        ticks: { color: '#000' },
+        grid: { color: '#ccc' }
+      }
+    }
+  };
+
   return (
     <div style={{
-      background: "#eaf2fb",
-      borderRadius: 8,
-      padding: "0.8em 1em",
-      margin: "1em 0",
-      fontSize: 14,
-      color: "#333",
-      textAlign: "left"
+      backgroundColor: '#f0f0f0',
+      padding: '1rem',
+      borderRadius: '8px',
+      height: '300px',
+      marginBottom: '2rem'
     }}>
-      <strong>Device Info:</strong> {info[deviceId]}
+      <Line data={chartData} options={options} />
     </div>
   );
 }
 
 function SensorTable({ data }) {
   return (
-    <table style={{
-      width: "100%",
-      marginTop: "1em",
-      borderCollapse: "collapse",
-      fontSize: 13,
-      background: "#f9fbfc",
-      borderRadius: 8,
-      overflow: "hidden"
-    }}>
+    <table style={{ width: '100%', color: 'white', borderCollapse: 'collapse' }}>
       <thead>
-        <tr style={{ background: "#e3e8ee" }}>
-          <th style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>Time</th>
-          <th style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>Water Level</th>
+        <tr>
+          <th style={{ borderBottom: '1px solid #555' }}>Time</th>
+          <th style={{ borderBottom: '1px solid #555' }}>Water Turbidity</th>
         </tr>
       </thead>
       <tbody>
-        {data.map((d, i) => (
-          <tr key={i}>
-            <td style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>{d.time}</td>
-            <td style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>{d.level} m</td>
+        {data.map((entry, index) => (
+          <tr key={index}>
+            <td>{entry.time}</td>
+            <td>{entry.level.toFixed(2)}</td>
           </tr>
         ))}
       </tbody>
@@ -129,83 +172,19 @@ function SensorTable({ data }) {
 }
 
 function AlertBanner({ level }) {
-  if (level >= 4.5) {
-    return (
-      <div style={{
-        background: "#ffcccc",
-        color: "#b30000",
-        padding: "0.7em 1em",
-        borderRadius: 8,
-        margin: "1em 0",
-        fontWeight: "bold"
-      }}>
-        ⚠️ Flood Warning: Water level is critically high!
-      </div>
-    );
-  }
-  if (level >= 4) {
-    return (
-      <div style={{
-        background: "#fff3cd",
-        color: "#856404",
-        padding: "0.7em 1em",
-        borderRadius: 8,
-        margin: "1em 0",
-        fontWeight: "bold"
-      }}>
-        ⚠️ Alert: Water level is rising. Stay alert!
-      </div>
-    );
-  }
-  return null;
-}
-
-function App() {
-  const [selectedDevice, setSelectedDevice] = useState(devices[0].id);
-  const currentData = dummyData[selectedDevice];
-  const latestLevel = currentData[currentData.length - 1].level;
-
   return (
-    <div className="App" style={{ padding: 24, maxWidth: 400, margin: '0 auto', background: '#e3f0ff', borderRadius: 12, boxShadow: '0 2px 12px #b6d6f6' }}>
-      <h2 style={{ color: "#0057b8" }}>Flood Detector Dashboard</h2>
-      <p style={{ color: "#222", marginBottom: 12 }}>
-        IoT-based early warning system for real-time flood monitoring.
-      </p>
-      <div style={{ marginBottom: 16 }}>
-        <label htmlFor="device-select" style={{ color: "#0057b8" }}>Select ESP Device: </label>
-        <select
-          id="device-select"
-          value={selectedDevice}
-          onChange={e => setSelectedDevice(e.target.value)}
-          style={{ background: "#fff", border: "1px solid #0057b8", borderRadius: 4, color: "#0057b8", padding: "0.3em 0.7em" }}
-        >
-          {devices.map(device => (
-            <option key={device.id} value={device.id}>{device.name}</option>
-          ))}
-        </select>
-      </div>
-      <DeviceInfo deviceId={selectedDevice} />
-      <AlertBanner level={latestLevel} />
-      <LineGraph data={currentData} />
-      <SensorTable data={currentData} />
-      <p style={{ marginTop: 24, color: '#0057b8', fontSize: 13 }}>
-        This is a demo graph showing water level readings for the selected ESP device.
-      </p>
-      <div style={{
-        marginTop: 20,
-        padding: "0.7em 1em",
-        background: "#eafbe7",
-        borderRadius: 8,
-        color: "#1a7f37",
-        fontWeight: "bold"
-      }}>
-        Emergency Contact: 9391****50
-      </div>
-      <footer style={{ marginTop: 32, fontSize: 12, color: "#0057b8" }}>
-        &copy; {new Date().getFullYear()} IoT Flood Detection Mini Project
-      </footer>
+    <div style={{
+      backgroundColor: '#ff4444',
+      color: '#fff',
+      padding: '1rem',
+      marginTop: '1rem',
+      borderRadius: '5px',
+      fontWeight: 'bold'
+    }}>
+      ⚠️ ALERT: Water particulate/silt quantity is high ({level.toFixed(2)} m)!
     </div>
   );
 }
 
 export default App;
+
