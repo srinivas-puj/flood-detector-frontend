@@ -99,6 +99,9 @@ function App() {
       <p style={{ marginTop: 24, color: '#555', fontSize: 13 }}>
         This is a demo graph showing water level readings for the selected ESP device.
       </p>
+      <p style={{ marginTop: 16, color: '#0074D9', fontWeight: 'bold' }}>
+        Contact: 9391****50
+      </p>
     </div>
   );
 }
