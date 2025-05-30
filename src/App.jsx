@@ -77,12 +77,100 @@ function LineGraph({ data }) {
   );
 }
 
+function DeviceInfo({ deviceId }) {
+  // You can expand this with more info per device if needed
+  const info = {
+    esp1: "Located at Riverbank A. Monitors upstream water levels.",
+    esp2: "Located at Bridge B. Monitors midstream water levels.",
+    esp3: "Located at Village C. Monitors downstream water levels.",
+  };
+  return (
+    <div style={{
+      background: "#eaf2fb",
+      borderRadius: 8,
+      padding: "0.8em 1em",
+      margin: "1em 0",
+      fontSize: 14,
+      color: "#333",
+      textAlign: "left"
+    }}>
+      <strong>Device Info:</strong> {info[deviceId]}
+    </div>
+  );
+}
+
+function SensorTable({ data }) {
+  return (
+    <table style={{
+      width: "100%",
+      marginTop: "1em",
+      borderCollapse: "collapse",
+      fontSize: 13,
+      background: "#f9fbfc",
+      borderRadius: 8,
+      overflow: "hidden"
+    }}>
+      <thead>
+        <tr style={{ background: "#e3e8ee" }}>
+          <th style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>Time</th>
+          <th style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>Water Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((d, i) => (
+          <tr key={i}>
+            <td style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>{d.time}</td>
+            <td style={{ padding: "0.5em", border: "1px solid #e3e8ee" }}>{d.level} m</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function AlertBanner({ level }) {
+  if (level >= 4.5) {
+    return (
+      <div style={{
+        background: "#ffcccc",
+        color: "#b30000",
+        padding: "0.7em 1em",
+        borderRadius: 8,
+        margin: "1em 0",
+        fontWeight: "bold"
+      }}>
+        ⚠️ Flood Warning: Water level is critically high!
+      </div>
+    );
+  }
+  if (level >= 4) {
+    return (
+      <div style={{
+        background: "#fff3cd",
+        color: "#856404",
+        padding: "0.7em 1em",
+        borderRadius: 8,
+        margin: "1em 0",
+        fontWeight: "bold"
+      }}>
+        ⚠️ Alert: Water level is rising. Stay alert!
+      </div>
+    );
+  }
+  return null;
+}
+
 function App() {
   const [selectedDevice, setSelectedDevice] = useState(devices[0].id);
+  const currentData = dummyData[selectedDevice];
+  const latestLevel = currentData[currentData.length - 1].level;
 
   return (
     <div className="App" style={{ padding: 24, maxWidth: 400, margin: '0 auto' }}>
       <h2>Flood Detector Dashboard</h2>
+      <p style={{ color: "#444", marginBottom: 12 }}>
+        IoT-based early warning system for real-time flood monitoring.
+      </p>
       <div style={{ marginBottom: 16 }}>
         <label htmlFor="device-select">Select ESP Device: </label>
         <select
@@ -95,13 +183,26 @@ function App() {
           ))}
         </select>
       </div>
-      <LineGraph data={dummyData[selectedDevice]} />
+      <DeviceInfo deviceId={selectedDevice} />
+      <AlertBanner level={latestLevel} />
+      <LineGraph data={currentData} />
+      <SensorTable data={currentData} />
       <p style={{ marginTop: 24, color: '#555', fontSize: 13 }}>
         This is a demo graph showing water level readings for the selected ESP device.
       </p>
-      <p style={{ marginTop: 16, color: '#0074D9', fontWeight: 'bold' }}>
-        Contact: 9391****50
-      </p>
+      <div style={{
+        marginTop: 20,
+        padding: "0.7em 1em",
+        background: "#eafbe7",
+        borderRadius: 8,
+        color: "#1a7f37",
+        fontWeight: "bold"
+      }}>
+        Emergency Contact: 9391****50
+      </div>
+      <footer style={{ marginTop: 32, fontSize: 12, color: "#aaa" }}>
+        &copy; {new Date().getFullYear()} IoT Flood Detection Mini Project
+      </footer>
     </div>
   );
 }
