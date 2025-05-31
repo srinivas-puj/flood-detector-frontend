@@ -77,7 +77,8 @@ function App() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem'
+        padding: '2rem',
+        boxSizing: 'border-box'
       }}
     >
       <div
@@ -89,7 +90,8 @@ function App() {
           padding: '2.5rem 2rem',
           maxWidth: 600,
           width: '100%',
-          textAlign: 'center'
+          textAlign: 'center',
+          margin: '0 auto'
         }}
       >
         <h2 style={{ color: "#0057b8", marginBottom: 8, fontWeight: 700, fontSize: 32, letterSpacing: 1 }}>
@@ -203,7 +205,10 @@ function LineGraph({ data }) {
       borderRadius: '12px',
       height: '400px',
       marginBottom: '2.5rem',
-      boxShadow: '0 2px 12px #e3e8ee'
+      boxShadow: '0 2px 12px #e3e8ee',
+      maxWidth: 540,
+      marginLeft: 'auto',
+      marginRight: 'auto'
     }}>
       <Line data={chartData} options={options} height={350} />
     </div>
