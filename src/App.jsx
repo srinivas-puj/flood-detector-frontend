@@ -70,29 +70,85 @@ function App() {
   const latestLevel = data.length ? data[data.length - 1].level : 0;
 
   return (
-    <div style={{ backgroundColor: '#121212', color: '#fff', minHeight: '100vh', padding: '2rem' }}>
-      <h2>🌊 Flood Detector Dashboard</h2>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #e3f0ff 0%, #f9fbfc 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem'
+      }}
+    >
+      <div
+        className="App"
+        style={{
+          background: '#fff',
+          borderRadius: 18,
+          boxShadow: '0 4px 32px #b6d6f6',
+          padding: '2.5rem 2rem',
+          maxWidth: 600,
+          width: '100%',
+          textAlign: 'center'
+        }}
+      >
+        <h2 style={{ color: "#0057b8", marginBottom: 8, fontWeight: 700, fontSize: 32, letterSpacing: 1 }}>
+          Flood Detector Dashboard
+        </h2>
+        <p style={{ color: "#444", marginBottom: 24, fontSize: 16 }}>
+          IoT-based early warning system for real-time flood monitoring.
+        </p>
 
-      {/* Device Selector */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label>Select Device: </label>
-        <select value={deviceId} onChange={e => setDeviceId(e.target.value)}>
-          {DEVICE_LIST.map(device => (
-            <option key={device} value={device}>{device}</option>
-          ))}
-        </select>
+        {/* Device Selector */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ color: "#0057b8", fontWeight: 600, fontSize: 16, marginRight: 8 }}>
+            Select Device:
+          </label>
+          <select
+            value={deviceId}
+            onChange={e => setDeviceId(e.target.value)}
+            style={{
+              background: "#f4f8fb",
+              border: "1px solid #0057b8",
+              borderRadius: 6,
+              color: "#0057b8",
+              padding: "0.5em 1.2em",
+              fontSize: 16,
+              fontWeight: 500
+            }}
+          >
+            {DEVICE_LIST.map(device => (
+              <option key={device} value={device}>{device}</option>
+            ))}
+          </select>
+        </div>
+
+        {loading && <div style={{ fontSize: 18, color: "#0057b8", margin: "2rem 0" }}>Loading data...</div>}
+        {!loading && !data.length && <div style={{ fontSize: 18, color: "#b30000", margin: "2rem 0" }}>No sensor data available.</div>}
+
+        {!loading && data.length > 0 && (
+          <>
+            <LineGraph data={data} />
+            <SensorTable data={data} />
+            {latestLevel >= 4 && <AlertBanner level={latestLevel} />}
+          </>
+        )}
+
+        <div style={{
+          marginTop: 28,
+          padding: "0.9em 1.2em",
+          background: "#eafbe7",
+          borderRadius: 8,
+          color: "#1a7f37",
+          fontWeight: "bold",
+          fontSize: 16
+        }}>
+          Emergency Contact: 9391****50
+        </div>
+        <footer style={{ marginTop: 32, fontSize: 13, color: "#0057b8" }}>
+          &copy; {new Date().getFullYear()} IoT Flood Detection Mini Project
+        </footer>
       </div>
-
-      {loading && <div>Loading data...</div>}
-      {!loading && !data.length && <div>No sensor data available.</div>}
-
-      {!loading && data.length > 0 && (
-        <>
-          <LineGraph data={data} />
-          <SensorTable data={data} />
-          {latestLevel >= 4 && <AlertBanner level={latestLevel} />}
-        </>
-      )}
     </div>
   );
 }
@@ -102,12 +158,14 @@ function LineGraph({ data }) {
     labels: data.map(d => d.time),
     datasets: [
       {
-        label: 'Water turbidity',
+        label: 'Water Turbidity',
         data: data.map(d => d.level),
-        borderColor: 'blue',
-        backgroundColor: 'lightblue',
+        borderColor: '#0074D9',
+        backgroundColor: 'rgba(0, 116, 217, 0.15)',
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7
       }
     ]
   };
@@ -117,53 +175,64 @@ function LineGraph({ data }) {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: '#000' }
+        labels: { color: '#0057b8', font: { size: 16, weight: 600 } }
       },
       title: {
         display: true,
         text: 'Water Turbidity Over Time',
-        color: '#000'
+        color: '#0057b8',
+        font: { size: 20, weight: 700 }
       }
     },
     scales: {
       x: {
-        ticks: { color: '#000' },
-        grid: { color: '#ccc' }
+        ticks: { color: '#0057b8', font: { size: 14 } },
+        grid: { color: '#e3e8ee' }
       },
       y: {
-        ticks: { color: '#000' },
-        grid: { color: '#ccc' }
+        ticks: { color: '#0057b8', font: { size: 14 } },
+        grid: { color: '#e3e8ee' }
       }
     }
   };
 
   return (
     <div style={{
-      backgroundColor: '#f0f0f0',
-      padding: '1rem',
-      borderRadius: '8px',
-      height: '300px',
-      marginBottom: '2rem'
+      backgroundColor: '#f4f8fb',
+      padding: '1.5rem 1rem',
+      borderRadius: '12px',
+      height: '400px',
+      marginBottom: '2.5rem',
+      boxShadow: '0 2px 12px #e3e8ee'
     }}>
-      <Line data={chartData} options={options} />
+      <Line data={chartData} options={options} height={350} />
     </div>
   );
 }
 
 function SensorTable({ data }) {
   return (
-    <table style={{ width: '100%', color: 'white', borderCollapse: 'collapse' }}>
+    <table style={{
+      width: '100%',
+      marginTop: '1em',
+      borderCollapse: 'collapse',
+      fontSize: 15,
+      background: "#f9fbfc",
+      borderRadius: 8,
+      overflow: "hidden",
+      boxShadow: '0 1px 6px #e3e8ee'
+    }}>
       <thead>
-        <tr>
-          <th style={{ borderBottom: '1px solid #555' }}>Time</th>
-          <th style={{ borderBottom: '1px solid #555' }}>Water Turbidity</th>
+        <tr style={{ background: "#e3e8ee" }}>
+          <th style={{ padding: "0.7em", border: "1px solid #e3e8ee", color: "#0057b8", fontWeight: 700 }}>Time</th>
+          <th style={{ padding: "0.7em", border: "1px solid #e3e8ee", color: "#0057b8", fontWeight: 700 }}>Water Turbidity</th>
         </tr>
       </thead>
       <tbody>
         {data.map((entry, index) => (
           <tr key={index}>
-            <td>{entry.time}</td>
-            <td>{entry.level.toFixed(2)}</td>
+            <td style={{ padding: "0.7em", border: "1px solid #e3e8ee", color: "#222" }}>{entry.time}</td>
+            <td style={{ padding: "0.7em", border: "1px solid #e3e8ee", color: "#222" }}>{entry.level.toFixed(2)}</td>
           </tr>
         ))}
       </tbody>
@@ -176,10 +245,12 @@ function AlertBanner({ level }) {
     <div style={{
       backgroundColor: '#ff4444',
       color: '#fff',
-      padding: '1rem',
-      marginTop: '1rem',
-      borderRadius: '5px',
-      fontWeight: 'bold'
+      padding: '1.2rem',
+      marginTop: '1.5rem',
+      borderRadius: '8px',
+      fontWeight: 'bold',
+      fontSize: 18,
+      boxShadow: '0 2px 8px #ffcccc'
     }}>
       ⚠️ ALERT: Water particulate/silt quantity is high ({level.toFixed(2)} m)!
     </div>
@@ -187,4 +258,3 @@ function AlertBanner({ level }) {
 }
 
 export default App;
-
