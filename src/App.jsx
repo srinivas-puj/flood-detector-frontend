@@ -1,3 +1,4 @@
+// ...existing imports...
 import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { AlertTriangle, Droplets, Wifi, WifiOff, Activity } from "lucide-react";
@@ -51,6 +52,8 @@ const DEVICE_LIST = [
 
 // UpdatedTable Component
 function UpdatedTable({ data }) {
+  // The `data` prop is already the latest readings fetched from Firebase for the selected device.
+  // This table will always show the last 10 readings from Firebase, updating live.
   return (
     <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-700 p-6 shadow-2xl mt-12">
       <h3 className="text-xl font-semibold text-gray-100 mb-4">
@@ -73,31 +76,34 @@ function UpdatedTable({ data }) {
           </thead>
           <tbody>
             {data.slice(-10).reverse().map((entry, index) => {
-              const entryAlert = entry.level >= 4 ? "critical" : entry.level >= 2.5 ? "warning" : "normal";
-
+              const entryAlert =
+                entry.level >= 0.003
+                  ? "critical"
+                  : entry.level >= 0.002
+                  ? "warning"
+                  : "normal";
               return (
                 <tr
-                    key={index}
-                    className="border-b border-gray-700 last:border-none hover:bg-gray-800/20 transition-colors duration-300">
-                    <td className="py-3 px-4 text-gray-300">
-                    {entry.time}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-gray-50">
-                    {entry.level.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4">
+                  key={index}
+                  className="border-b border-gray-700 last:border-none hover:bg-gray-800/20 transition-colors duration-300"
+                >
+                  <td className="py-3 px-4 text-gray-300">{entry.time}</td>
+                  <td className="py-3 px-4 font-semibold text-gray-50">
+                    {entry.level.toFixed(4)}
+                  </td>
+                  <td className="py-3 px-4">
                     <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         entryAlert === "critical"
-                            ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                            : entryAlert === "warning"
-                            ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                            : "bg-green-500/20 text-green-300 border border-green-500/30"
-                        }`}
+                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                          : entryAlert === "warning"
+                          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                          : "bg-green-500/20 text-green-300 border border-green-500/30"
+                      }`}
                     >
-                        {entryAlert.toUpperCase()}
+                      {entryAlert.toUpperCase()}
                     </span>
-                    </td>
+                  </td>
                 </tr>
               );
             })}
@@ -150,10 +156,11 @@ function App() {
 
         const json = await res.json();
 
+        // Use flood_coefficient as the turbidity value
         const readings = Object.values(json || {}).map(
-          ({ timestamp, value }) => ({
+          ({ timestamp, flood_coefficient }) => ({
             time: timestampToTime(timestamp),
-            level: value / 100,
+            level: flood_coefficient, // Use flood_coefficient directly
             timestamp,
           })
         );
@@ -175,10 +182,10 @@ function App() {
   const latestLevel = data.length ? data[data.length - 1].level : 0;
 
   const selectedDevice = DEVICE_LIST.find((d) => d.id === deviceId);
-  const alertLevel = latestLevel >= 4 ? "critical" : latestLevel >= 2.5 ? "warning" : "normal";
+  const alertLevel = latestLevel >= 1.5 ? "critical" : latestLevel >= 1.0 ? "warning" : "normal";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 p-4 relative flex items-center justify-center">
       {/* Animated Water Background */}
       <div style={waterBgStyle} aria-hidden="true">
         <div style={waveStyle('0s', 0.18, 0, 'linear-gradient(90deg,#60a5fa 0%,#38bdf8 100%)')} />
@@ -194,15 +201,9 @@ function App() {
         className='fixed inset-0 pointer-events-none z-0'
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}>
       </div>
-      <div className="flex items-center justify-center">
-  <div className="w-full max-w-7xl relative z-10">
-    {/* App content here */}
-  </div>
-</div>
-
 
       {/* Main Container */}
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="relative z-10 max-w-7xl mx-auto w-full">
         {/* Header Section*/}
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -333,7 +334,7 @@ function App() {
         <section className="bg-gray-800/60 backdrop-blur-md p-6 rounded-2xl border border-gray-700 shadow-2xl mt-12">
           <h4 className="text-gray-100 font-semibold">Current Turbidity</h4>
           <div className="text-4xl font-semibold mt-2">
-            {latestLevel.toFixed(2)} NTU
+            {latestLevel.toFixed(4)} NTU
           </div>
           <p className="text-gray-400 mt-1">
             Location: {selectedDevice?.location}
