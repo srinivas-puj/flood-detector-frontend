@@ -78,7 +78,6 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
   margin-bottom: 0.5rem;
   letter-spacing: 1px;
 }
@@ -255,4 +254,16 @@ body {
 @media (max-width: 900px) {
   .dashboard-card, .table-section { padding: 1rem 0.5rem; }
   .dashboard-title { font-size: 2rem; }
+}
+/* Table row hover effects */
+tr.border-b.border-gray-700.last\:border-none:hover {
+  /* Default gray hover */
+  background-color: rgba(220, 233, 47, 0.3); /* gray-800/20 */
+  transition: background-color 0.3s;
+}
+
+/* Blue hover for interactive/clickable rows */
+tr.border-b.border-gray-700.last\:border-none.cursor-pointer:hover {
+  background-color: rgba(220, 233, 47, 0.3); /* blue-700/30 */
+  transition: background-color 0.2s;
 }

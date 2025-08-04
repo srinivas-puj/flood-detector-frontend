@@ -51,9 +51,14 @@ const DEVICE_LIST = [
 ];
 
 // UpdatedTable Component
+// UpdatedTable Component
 function UpdatedTable({ data }) {
-  // The `data` prop is already the latest readings fetched from Firebase for the selected device.
-  // This table will always show the last 10 readings from Firebase, updating live.
+  // Helper to get date string from timestamp
+  function getDateString(ts) {
+    const date = new Date(ts * 1000);
+    return date.toLocaleDateString();
+  }
+
   return (
     <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-700 p-6 shadow-2xl mt-12">
       <h3 className="text-xl font-semibold text-gray-100 mb-4">
@@ -63,6 +68,9 @@ function UpdatedTable({ data }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-700">
+              <th className="text-left py-3 px-4 text-gray-400 font-semibold">
+                Date
+              </th>
               <th className="text-left py-3 px-4 text-gray-400 font-semibold">
                 Time
               </th>
@@ -74,40 +82,43 @@ function UpdatedTable({ data }) {
               </th>
             </tr>
           </thead>
-          <tbody>
-            {data.slice(-10).reverse().map((entry, index) => {
-              const entryAlert =
-                entry.level >= 0.003
-                  ? "critical"
-                  : entry.level >= 0.002
-                  ? "warning"
-                  : "normal";
-              return (
-                <tr
-                  key={index}
-                  className="border-b border-gray-700 last:border-none hover:bg-gray-800/20 transition-colors duration-300"
-                >
-                  <td className="py-3 px-4 text-gray-300">{entry.time}</td>
-                  <td className="py-3 px-4 font-semibold text-gray-50">
-                    {entry.level.toFixed(4)}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        entryAlert === "critical"
-                          ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                          : entryAlert === "warning"
-                          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                          : "bg-green-500/20 text-green-300 border border-green-500/30"
-                      }`}
-                    >
-                      {entryAlert.toUpperCase()}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+<tbody>
+  {data.slice(-10).reverse().map((entry, index) => {
+    const entryAlert =
+      entry.level >= 0.003
+        ? "critical"
+        : entry.level >= 0.002
+        ? "warning"
+        : "normal";
+    return (
+      <tr
+        key={index}
+        className="border-b border-gray-700 last:border-none hover:bg-blue-700/30 transition-colors duration-200 cursor-pointer"
+      >
+        <td className="py-3 px-4 text-gray-300">
+          {getDateString(entry.timestamp)}
+        </td>
+        <td className="py-3 px-4 text-gray-300">{entry.time}</td>
+        <td className="py-3 px-4 font-semibold text-gray-50">
+          {entry.level.toFixed(4)}
+        </td>
+        <td className="py-3 px-4">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+              entryAlert === "critical"
+                ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                : entryAlert === "warning"
+                ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                : "bg-green-500/20 text-green-300 border border-green-500/30"
+            }`}
+          >
+            {entryAlert.toUpperCase()}
+          </span>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
         </table>
       </div>
     </div>
